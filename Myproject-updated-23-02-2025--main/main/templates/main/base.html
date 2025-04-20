@@ -1033,23 +1033,23 @@
                     }
                 } else if (currentActionType === 'manager') {
                     // For accessing password manager
-                    const response = await fetch('{% url "verify_master_password" %}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        body: JSON.stringify({ master_password: masterPassword })
-                    });
+                const response = await fetch('{% url "verify_master_password" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ master_password: masterPassword })
+                });
 
-                    const data = await response.json();
+                const data = await response.json();
 
-                    if (data.success) {
+                if (data.success) {
                         window.location.href = currentActionUrl;
-                    } else {
-                        errorElement.textContent = data.message || 'Incorrect master password. Please try again.';
-                        errorElement.style.display = 'block';
-                        document.getElementById('masterPassword').value = '';
+                } else {
+                    errorElement.textContent = data.message || 'Incorrect master password. Please try again.';
+                    errorElement.style.display = 'block';
+                    document.getElementById('masterPassword').value = '';
                     }
                 } else {
                     // For editing password
