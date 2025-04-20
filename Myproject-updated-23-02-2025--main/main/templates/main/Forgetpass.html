@@ -1,0 +1,381 @@
+{% extends 'main/auth_base.html' %}
+{% load static %}
+
+{% block title %}Forgot Password{% endblock %}
+
+{% block content %}
+<div class="forgot-container">
+    <div class="forgot-content">
+        <div class="forgot-left">
+            <div class="forgot-info">
+                <div class="logo">
+                    <i class="fas fa-lock"></i>
+                    <span>Password Manager</span>
+                </div>
+                <h1>Password Recovery</h1>
+                <p>Don't worry, we'll help you get back into your account</p>
+                <div class="features">
+                    <div class="feature">
+                        <i class="fas fa-envelope"></i>
+                        <div class="feature-content">
+                            <h3>Email Recovery</h3>
+                            <p>We'll send you a secure link to reset your password</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <div class="feature-content">
+                            <h3>Secure Process</h3>
+                            <p>Your security is our top priority</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-clock"></i>
+                        <div class="feature-content">
+                            <h3>Quick Recovery</h3>
+                            <p>Get back to your account in minutes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="forgot-right">
+            <div class="forgot-form-container">
+                <div class="form-header">
+                    <h2>Reset Password</h2>
+                    <p>Enter your email to receive recovery instructions</p>
+                </div>
+
+                {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="POST" class="forgot-form" id="forgotForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="email">
+                            <i class="fas fa-envelope"></i>
+                            Email Address
+                        </label>
+                        <div class="input-group">
+                            <input type="email" name="email" id="email" placeholder="Enter your email" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Send Reset Link
+                    </button>
+                </form>
+
+                <div class="login-link">
+                    Remember your password? <a href="{% url 'login' %}">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <style>
+    .forgot-container {
+        min-height: 100vh;
+        width: 100%;
+        background: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center;
+        background-size: cover;
+        position: relative;
+    }
+
+    .forgot-content {
+        display: flex;
+        min-height: 100vh;
+        position: relative;
+        z-index: 1;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(5px);
+    }
+
+    .forgot-left {
+        flex: 1;
+            display: flex;
+        align-items: center;
+            justify-content: center;
+        padding: 40px;
+        color: white;
+    }
+
+    .forgot-info {
+        max-width: 500px;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 40px;
+        font-size: 1.5em;
+        font-weight: 600;
+    }
+
+    .logo i {
+        font-size: 1.8em;
+        color: #6366f1;
+    }
+
+    .forgot-info h1 {
+        font-size: 2.5em;
+        margin: 0 0 20px;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .forgot-info p {
+        font-size: 1.1em;
+        opacity: 0.9;
+        margin-bottom: 40px;
+        line-height: 1.6;
+    }
+
+    .features {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .feature {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 12px;
+        backdrop-filter: blur(5px);
+        transition: transform 0.3s ease;
+    }
+
+    .feature:hover {
+        transform: translateX(10px);
+    }
+
+    .feature i {
+        font-size: 1.5em;
+        color: #6366f1;
+        margin-top: 5px;
+    }
+
+    .feature-content h3 {
+        margin: 0 0 5px;
+        font-size: 1.1em;
+        font-weight: 600;
+    }
+
+    .feature-content p {
+        margin: 0;
+        font-size: 0.9em;
+        opacity: 0.8;
+    }
+
+    .forgot-right {
+        flex: 1;
+        display: flex;
+            align-items: center;
+        justify-content: center;
+        padding: 40px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        }
+
+    .forgot-form-container {
+            width: 100%;
+        max-width: 450px;
+        animation: slideUp 0.5s ease;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .form-header h2 {
+        color: #1e293b;
+        margin: 0;
+        font-size: 2em;
+        font-weight: 600;
+    }
+
+    .form-header p {
+        color: #64748b;
+        margin: 10px 0 0;
+        font-size: 0.95em;
+        }
+
+        .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        color: #1e293b;
+        font-weight: 500;
+        font-size: 0.95em;
+    }
+
+    .form-group label i {
+        color: #6366f1;
+        font-size: 1.1em;
+    }
+
+    .input-group {
+        position: relative;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .input-group:hover {
+        border-color: #cbd5e1;
+    }
+
+    .input-group:focus-within {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .input-group input {
+            width: 100%;
+        padding: 16px 20px;
+        border: none;
+        border-radius: 12px;
+        background: transparent;
+        color: #1e293b;
+        font-size: 1em;
+        transition: all 0.3s;
+    }
+
+    .input-group input:focus {
+        outline: none;
+    }
+
+    .input-group input::placeholder {
+        color: #94a3b8;
+    }
+
+    .btn {
+            width: 100%;
+        padding: 16px;
+            border: none;
+        border-radius: 12px;
+        font-size: 1em;
+        font-weight: 500;
+            cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+
+    .login-link {
+        text-align: center;
+        color: #64748b;
+    }
+
+    .login-link a {
+        color: #6366f1;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+
+    .login-link a:hover {
+        color: #4f46e5;
+        text-decoration: underline;
+    }
+
+    .messages {
+        margin-bottom: 20px;
+    }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+    }
+
+    .alert-error {
+        background: #fee2e2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+
+    .alert-success {
+        background: #dcfce7;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+    }
+
+    @media (max-width: 768px) {
+        .forgot-content {
+            flex-direction: column;
+        }
+
+        .forgot-left {
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .forgot-right {
+            padding: 40px 20px;
+        }
+
+        .forgot-info {
+            max-width: 100%;
+        }
+
+        .features {
+            align-items: center;
+        }
+
+        .feature {
+            width: 100%;
+            max-width: 400px;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,368 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="home-container">
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1>Welcome to Your Password Vault</h1>
+            <p>Secure, Simple, and Smart Password Management</p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <div class="stat-info">
+                        <span class="stat-number">{{ total_passwords }}</span>
+                        <span class="stat-label">Passwords Secured</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-clock"></i>
+                    <div class="stat-info">
+                        <span class="stat-number">{{ last_login|date:"M d, Y" }}</span>
+                        <span class="stat-label">Last Login</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-image">
+            <div class="floating-cards">
+                <div class="card card-1">
+                    <i class="fas fa-lock"></i>
+                    <span>Secure</span>
+                </div>
+                <div class="card card-2">
+                    <i class="fas fa-sync"></i>
+                    <span>Synced</span>
+                </div>
+                <div class="card card-3">
+                    <i class="fas fa-bolt"></i>
+                    <span>Fast</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-grid">
+            <a href="{% url 'add_password' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <h3>Add New Password</h3>
+                <p>Store a new password securely</p>
+            </a>
+            <a href="{% url 'profile' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h3>View Profile</h3>
+                <p>Manage your account settings</p>
+            </a>
+            <a href="{% url 'generate_password' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-key"></i>
+                </div>
+                <h3>Generate Password</h3>
+                <p>Create a strong password</p>
+            </a>
+            <a href="{% url 'settings' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <h3>Settings</h3>
+                <p>Customize your preferences</p>
+            </a>
+        </div>
+    </div>
+
+    <div class="recent-activity">
+        <h2>Recent Activity</h2>
+        <div class="activity-timeline">
+            {% for activity in recent_activities %}
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fas fa-{{ activity.icon }}"></i>
+                </div>
+                <div class="timeline-content">
+                    <h4>{{ activity.title }}</h4>
+                    <p>{{ activity.description }}</p>
+                    <span class="timeline-time">{{ activity.time }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .home-container {
+        padding: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .hero-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4rem;
+        margin-bottom: 4rem;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        padding: 3rem;
+        border-radius: 20px;
+        color: white;
+    }
+
+    .hero-content {
+        flex: 1;
+    }
+
+    .hero-content h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+
+    .hero-content p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 12px;
+        backdrop-filter: blur(5px);
+    }
+
+    .stat-item i {
+        font-size: 1.5rem;
+        color: #a5b4fc;
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-number {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .hero-image {
+        flex: 1;
+        position: relative;
+        height: 300px;
+    }
+
+    .floating-cards {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+
+    .card {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        padding: 1.5rem;
+        border-radius: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .card i {
+        font-size: 2rem;
+        color: #a5b4fc;
+    }
+
+    .card span {
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .card-1 {
+        top: 20%;
+        left: 10%;
+        animation-delay: 0s;
+    }
+
+    .card-2 {
+        top: 40%;
+        right: 15%;
+        animation-delay: 2s;
+    }
+
+    .card-3 {
+        top: 60%;
+        left: 20%;
+        animation-delay: 4s;
+    }
+
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-20px);
+        }
+    }
+
+    .quick-actions {
+        margin-bottom: 4rem;
+    }
+
+    .quick-actions h2 {
+        font-size: 1.8rem;
+        margin-bottom: 2rem;
+        color: #1e293b;
+    }
+
+    .action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+
+    .action-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        text-decoration: none;
+        color: #1e293b;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-icon {
+        width: 50px;
+        height: 50px;
+        background: #f1f5f9;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .action-icon i {
+        font-size: 1.5rem;
+        color: #6366f1;
+    }
+
+    .action-card h3 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .action-card p {
+        font-size: 0.9rem;
+        color: #64748b;
+    }
+
+    .recent-activity h2 {
+        font-size: 1.8rem;
+        margin-bottom: 2rem;
+        color: #1e293b;
+    }
+
+    .activity-timeline {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .timeline-item {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .timeline-item:last-child {
+        border-bottom: none;
+    }
+
+    .timeline-icon {
+        width: 40px;
+        height: 40px;
+        background: #f1f5f9;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .timeline-icon i {
+        color: #6366f1;
+    }
+
+    .timeline-content {
+        flex: 1;
+    }
+
+    .timeline-content h4 {
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+        color: #1e293b;
+    }
+
+    .timeline-content p {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+
+    .timeline-time {
+        font-size: 0.8rem;
+        color: #94a3b8;
+    }
+
+    @media (max-width: 768px) {
+        .hero-section {
+            flex-direction: column;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .hero-stats {
+            justify-content: center;
+        }
+
+        .hero-image {
+            height: 200px;
+        }
+
+        .action-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %} 

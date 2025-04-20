@@ -1,0 +1,600 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="header-content">
+            <h1>Password Vault</h1>
+            <p>Your digital fortress</p>
+        </div>
+        <div class="header-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ total_passwords }}</span>
+                    <span class="stat-label">Passwords</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ last_login|date:"M d" }}</span>
+                    <span class="stat-label">Last Login</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2>Quick Access</h2>
+                <div class="card-actions">
+                    <a href="{% url 'password_manager' %}" class="action-btn">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                    <div class="search-container">
+                        <input type="text" class="search-input" placeholder="Search passwords...">
+                        <button class="action-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="password-list">
+                {% for password in passwords %}
+                <div class="password-item">
+                    <div class="password-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div class="password-info">
+                        <h3>{{ password.website }}</h3>
+                        <p>{{ password.username }}</p>
+                    </div>
+                    <div class="password-actions">
+                        <button class="action-btn" onclick="showMasterPasswordModal('{% url 'get_password' password.id %}', 'view')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="showMasterPasswordModal('{% url 'edit_password' password.id %}', 'edit')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2>Security Status</h2>
+                <span class="status-badge protected">Protected</span>
+            </div>
+            <div class="security-info">
+                <div class="info-item">
+                    <i class="fas fa-lock"></i>
+                    <div>
+                        <h4>Encryption</h4>
+                        <p>Military-grade AES-256</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <h4>Firewall</h4>
+                        <p>Active Protection</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <style>
+    .dashboard-container {
+        padding: 2rem;
+        background: #0a0a0a;
+        min-height: 100vh;
+        color: #fff;
+    }
+
+    .dashboard-header {
+            display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-content h1 {
+        font-size: 2.5rem;
+        margin: 0;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+    }
+
+    .header-content p {
+        margin: 0.5rem 0 0;
+        color: #94a3b8;
+        font-size: 1.1rem;
+    }
+
+    .header-stats {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stat-icon i {
+        font-size: 1.5rem;
+        color: #6366f1;
+    }
+
+    .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #94a3b8;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .dashboard-card {
+        background: #1a1a1a;
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .main-card {
+        grid-column: span 2;
+    }
+
+    .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .card-header h2 {
+        font-size: 1.5rem;
+        margin: 0;
+        color: #fff;
+    }
+
+    .card-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .action-btn {
+        width: 40px;
+        height: 40px;
+            border: none;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: #fff;
+            cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        background: rgba(99, 102, 241, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .search-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-input {
+        width: 200px;
+        padding: 0.5rem 1rem;
+        padding-right: 40px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        color: #fff;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: rgba(99, 102, 241, 0.5);
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .search-btn {
+        position: absolute;
+        right: 0;
+        width: 40px;
+        height: 40px;
+        background: transparent;
+            border: none;
+        color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .search-btn:hover {
+        color: #6366f1;
+        transform: scale(1.1);
+    }
+
+    .add-btn {
+        background: rgba(99, 102, 241, 0.2);
+    }
+
+    .add-btn:hover {
+        background: rgba(99, 102, 241, 0.3);
+    }
+
+    .password-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .password-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+            cursor: pointer;
+    }
+
+    .password-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(5px);
+        text-decoration: none;
+    }
+
+    .password-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .password-icon i {
+        color: #6366f1;
+    }
+
+    .password-info {
+        flex: 1;
+    }
+
+    .password-info h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: #fff;
+    }
+
+    .password-info p {
+        margin: 0.25rem 0 0;
+        font-size: 0.9rem;
+        color: #94a3b8;
+    }
+
+    .password-actions {
+        display: flex;
+        gap: 0.5rem;
+        z-index: 2;
+    }
+
+    .copy-btn, .edit-btn {
+        width: 35px;
+        height: 35px;
+            border: none;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: #fff;
+            cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 2;
+    }
+
+    .copy-btn:hover, .edit-btn:hover {
+        background: rgba(99, 102, 241, 0.2);
+        transform: scale(1.1);
+    }
+
+    .security-card {
+        background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    }
+
+    .security-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(16, 185, 129, 0.1);
+        border-radius: 20px;
+        color: #10b981;
+    }
+
+    .indicator-dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.2);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+    .security-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .security-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .security-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .security-icon i {
+        color: #6366f1;
+    }
+
+    .security-info h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: #fff;
+    }
+
+    .security-info p {
+        margin: 0.25rem 0 0;
+        font-size: 0.9rem;
+        color: #94a3b8;
+    }
+
+    .activity-card {
+        background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    }
+
+    .activity-filter select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .activity-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .timeline-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .timeline-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(5px);
+        text-decoration: none;
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .timeline-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .timeline-item:hover .timeline-icon {
+        background: rgba(99, 102, 241, 0.2);
+        transform: scale(1.1);
+    }
+
+    .timeline-content h4 {
+        margin: 0;
+        font-size: 1rem;
+        color: #fff;
+        transition: all 0.3s ease;
+    }
+
+    .timeline-item:hover .timeline-content h4 {
+        color: #6366f1;
+    }
+
+    .timeline-content p {
+        margin: 0.25rem 0 0;
+        font-size: 0.9rem;
+        color: #94a3b8;
+    }
+
+    .timeline-time {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 2rem;
+        }
+
+        .header-stats {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .main-card {
+            grid-column: span 1;
+        }
+
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Search functionality
+        const searchInput = document.querySelector('.search-input');
+        const searchBtn = document.querySelector('.search-btn');
+        const passwordItems = document.querySelectorAll('.password-item');
+
+        function filterPasswords(searchTerm) {
+            passwordItems.forEach(item => {
+                const website = item.querySelector('h3').textContent.toLowerCase();
+                const username = item.querySelector('p').textContent.toLowerCase();
+                const searchTermLower = searchTerm.toLowerCase();
+
+                if (website.includes(searchTermLower) || username.includes(searchTermLower)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput.addEventListener('input', function() {
+            filterPasswords(this.value);
+        });
+
+        searchBtn.addEventListener('click', function() {
+            filterPasswords(searchInput.value);
+        });
+
+        // Add button functionality is handled by the link
+        // Copy and edit buttons functionality
+        const copyButtons = document.querySelectorAll('.copy-btn');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const passwordId = this.dataset.passwordId;
+                // Add your copy password logic here
+            });
+        });
+
+        const editButtons = document.querySelectorAll('.edit-btn');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const passwordId = this.dataset.passwordId;
+                // Add your edit password logic here
+            });
+        });
+    });
+    </script>
+{% endblock %}

@@ -1,0 +1,1187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Password Manager{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'main/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --primary-hover: #357abd;
+            --text-color: #333;
+            --text-color-light: #666;
+            --background-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --primary-color-rgb: 74, 144, 226;
+        }
+
+        /* Dark theme variables */
+        .dark-theme {
+            --text-color: #ffffff;
+            --text-color-light: #b0b0b0;
+            --background-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --border-color: #404040;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo i {
+            color: #6366f1;
+            font-size: 2rem;
+        }
+
+        .sidebar-toggle {
+            background: transparent;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .user-info {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #6366f1;
+        }
+
+        .user-details h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .user-details p {
+            margin: 0.25rem 0 0;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section h4 {
+            margin: 0 0 1rem;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.2);
+            color: #6366f1;
+        }
+
+        .nav-item.active i {
+            color: #6366f1;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .security-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #10b981;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .version-info {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header-stats {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .stat-card {
+                width: 100%;
+            }
+
+            .modal-content {
+                width: 90%;
+                margin: 0 auto;
+            }
+
+            .password-display {
+                flex-direction: column;
+            }
+
+            .password-display input {
+                margin-bottom: 0.5rem;
+            }
+
+            .copy-btn {
+                width: 100%;
+            }
+
+            /* Mobile-specific navigation */
+            .mobile-nav {
+                display: flex;
+                justify-content: space-around;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--card-bg);
+                padding: 0.5rem;
+                border-top: 1px solid var(--border-color);
+                z-index: 1000;
+            }
+
+            .mobile-nav-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                color: var(--text-color);
+                text-decoration: none;
+                font-size: 0.8rem;
+            }
+
+            .mobile-nav-item i {
+                font-size: 1.2rem;
+                margin-bottom: 0.2rem;
+            }
+
+            .desktop-only {
+                display: none;
+            }
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #0f0f0f;
+            color: #fff;
+        }
+
+        /* Dashboard Container */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-content h1 {
+            font-size: 2rem;
+            margin: 0;
+            color: #fff;
+        }
+
+        .header-content p {
+            margin: 0.5rem 0 0;
+            color: #94a3b8;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 200px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #6366f1;
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            margin: 0;
+            color: #fff;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .action-btn {
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .action-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .search-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: #fff;
+            width: 200px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .sidebar-nav::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: var(--card-bg);
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb:hover {
+            background: var(--text-color-light);
+        }
+
+        /* Master Password Modal Styles */
+        .master-password-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header i {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            color: #3b82f6;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #1f2937;
+        }
+
+        .modal-input-group {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .modal-input-group i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+        }
+
+        .modal-input-group input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .modal-error {
+            color: #ef4444;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-secondary {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+
+        /* Password Display Modal Styles */
+        .password-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .password-display input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: #f9fafb;
+        }
+
+        .copy-btn {
+            padding: 0.75rem;
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .copy-btn:hover {
+            background-color: #e5e7eb;
+        }
+
+        .copy-btn i {
+            color: #4b5563;
+        }
+
+        /* Password Recovery Modal Styles */
+        .recovery-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .recovery-option {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .recovery-option:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: #6366f1;
+        }
+
+        .recovery-option i {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            color: #6366f1;
+        }
+
+        .recovery-option-content {
+            flex: 1;
+        }
+
+        .recovery-option-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .recovery-option-description {
+            font-size: 0.875rem;
+            color: var(--text-color-light);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Password Vault</span>
+                </div>
+                <button class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <h3>{{ user.username }}</h3>
+                    <p>{{ user.email }}</p>
+                </div>
+            </div>
+
+            <div class="sidebar-nav">
+                <div class="nav-section">
+                    <h4>Main</h4>
+                    <a href="{% url 'dashboard' %}" class="nav-item active">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{% url 'password_manager' %}" class="nav-item">
+                        <i class="fas fa-key"></i>
+                        <span>Password Manager</span>
+                    </a>
+                    <a href="{% url 'generate_password' %}" class="nav-item">
+                        <i class="fas fa-magic"></i>
+                        <span>Generate Password</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <h4>Security</h4>
+                    <a href="{% url 'settings' %}" class="nav-item">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <a href="{% url 'security_settings' %}" class="nav-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Security</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <h4>Account</h4>
+                    <a href="{% url 'profile' %}" class="nav-item">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="{% url 'logout' %}" class="nav-item">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="security-status">
+                    <div class="status-indicator"></div>
+                    <span>Protected</span>
+                </div>
+                <div class="version-info">
+                    <span>v1.0.0</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Master Password Modal -->
+    <div class="master-password-modal" id="masterPasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-shield-alt"></i>
+                <h2>Verify Master Password</h2>
+            </div>
+            <form class="modal-form" id="masterPasswordForm">
+                <div class="modal-input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="masterPassword" placeholder="Enter your master password" required>
+                </div>
+                <div class="modal-error" id="masterPasswordError">
+                    Incorrect master password. Please try again.
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeMasterPasswordModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Verify
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Password Display Modal -->
+    <div class="master-password-modal" id="passwordDisplayModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-key"></i>
+                <h2>Password</h2>
+            </div>
+            <div class="modal-body">
+                <div class="password-display">
+                    <input type="text" id="displayedPassword" readonly>
+                    <button class="copy-btn" onclick="copyToClipboard()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-primary" onclick="closePasswordDisplayModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add this before the closing body tag -->
+    <div class="mobile-nav desktop-only">
+        <a href="{% url 'dashboard' %}" class="mobile-nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="{% url 'password_manager' %}" class="mobile-nav-item">
+            <i class="fas fa-key"></i>
+            <span>Passwords</span>
+        </a>
+        <a href="{% url 'generate_password' %}" class="mobile-nav-item">
+            <i class="fas fa-magic"></i>
+            <span>Generate</span>
+        </a>
+        <a href="{% url 'settings' %}" class="mobile-nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </a>
+    </div>
+
+    <!-- Password Recovery Modal -->
+    <div class="master-password-modal" id="recoveryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-key"></i>
+                <h2>Account Recovery</h2>
+            </div>
+            <div class="recovery-options">
+                <div class="recovery-option" onclick="showRecoveryMethod('email')">
+                    <i class="fas fa-envelope"></i>
+                    <div class="recovery-option-content">
+                        <div class="recovery-option-title">Email Recovery</div>
+                        <div class="recovery-option-description">Receive a recovery link via email</div>
+                    </div>
+                </div>
+                <div class="recovery-option" onclick="showRecoveryMethod('security_questions')">
+                    <i class="fas fa-question-circle"></i>
+                    <div class="recovery-option-content">
+                        <div class="recovery-option-title">Security Questions</div>
+                        <div class="recovery-option-description">Answer your security questions</div>
+                    </div>
+                </div>
+                <div class="recovery-option" onclick="showRecoveryMethod('backup_codes')">
+                    <i class="fas fa-key"></i>
+                    <div class="recovery-option-content">
+                        <div class="recovery-option-title">Backup Codes</div>
+                        <div class="recovery-option-description">Use your backup recovery codes</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeRecoveryModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Master Password Modal -->
+    <div class="master-password-modal" id="updateMasterPasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-key"></i>
+                <h2>Update Master Password</h2>
+            </div>
+            <form id="updateMasterPasswordForm">
+                <div class="modal-input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="currentMasterPassword" placeholder="Current master password" required>
+                </div>
+                <div class="modal-input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="newMasterPassword" placeholder="New master password" required>
+                </div>
+                <div class="modal-input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="confirmNewMasterPassword" placeholder="Confirm new master password" required>
+                </div>
+                <div class="modal-error" id="updateMasterPasswordError">
+                    Failed to update master password.
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeUpdateMasterPasswordModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Theme switcher
+        document.addEventListener('DOMContentLoaded', function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.body.classList.add(`${theme}-theme`);
+        });
+
+        function setTheme(theme) {
+            document.body.classList.remove('light-theme', 'dark-theme');
+            document.body.classList.add(`${theme}-theme`);
+            localStorage.setItem('theme', theme);
+        }
+
+        // Master Password Modal Functions
+        let currentActionUrl = '';
+        let currentActionType = ''; // 'view', 'edit', 'copy'
+
+        function showMasterPasswordModal(actionUrl, actionType) {
+            currentActionUrl = actionUrl;
+            currentActionType = actionType;
+            document.getElementById('masterPasswordModal').style.display = 'flex';
+            document.getElementById('masterPassword').focus();
+        }
+
+        function closeMasterPasswordModal() {
+            document.getElementById('masterPasswordModal').style.display = 'none';
+            document.getElementById('masterPassword').value = '';
+            document.getElementById('masterPasswordError').style.display = 'none';
+            currentActionUrl = '';
+            currentActionType = '';
+        }
+
+        function showPasswordDisplayModal(password) {
+            document.getElementById('displayedPassword').value = password;
+            document.getElementById('passwordDisplayModal').style.display = 'flex';
+        }
+
+        function closePasswordDisplayModal() {
+            document.getElementById('passwordDisplayModal').style.display = 'none';
+            document.getElementById('displayedPassword').value = '';
+        }
+
+        function copyToClipboard() {
+            const passwordInput = document.getElementById('displayedPassword');
+            passwordInput.select();
+            document.execCommand('copy');
+            const copyBtn = document.querySelector('.copy-btn');
+            copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+            }, 2000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const toggleBtn = document.querySelector('.sidebar-toggle');
+            const passwordManagerLink = document.querySelector('a[href="{% url "password_manager" %}"]');
+            const generatePasswordLink = document.querySelector('a[href="{% url "generate_password" %}"]');
+
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+            });
+
+            // Add click handler for password manager link
+            passwordManagerLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showMasterPasswordModal('{% url "password_manager" %}', 'manager');
+            });
+
+            // Add click handler for generate password link
+            generatePasswordLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showMasterPasswordModal('{% url "generate_password" %}', 'manager');
+            });
+
+            // Highlight active nav item
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                if (item.getAttribute('href') === currentPath) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Add mobile navigation toggle
+            const mobileNav = document.querySelector('.mobile-nav');
+            if (window.innerWidth <= 768) {
+                mobileNav.classList.remove('desktop-only');
+            }
+
+            window.addEventListener('resize', function() {
+                if (window.innerWidth <= 768) {
+                    mobileNav.classList.remove('desktop-only');
+                } else {
+                    mobileNav.classList.add('desktop-only');
+                }
+            });
+
+            // Add click handler for update master password button if it exists
+            const updateMasterPasswordBtn = document.getElementById('updateMasterPasswordBtn');
+            if (updateMasterPasswordBtn) {
+                updateMasterPasswordBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showUpdateMasterPasswordModal();
+                });
+            }
+        });
+
+        // Update the form submit handler
+        document.getElementById('masterPasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const masterPassword = document.getElementById('masterPassword').value;
+            const errorElement = document.getElementById('masterPasswordError');
+
+            try {
+                if (currentActionType === 'view' || currentActionType === 'copy') {
+                    // For viewing/copying password
+                    const response = await fetch(currentActionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: `master_password=${encodeURIComponent(masterPassword)}`
+                    });
+
+                    const data = await response.json();
+
+                    if (data.status === 'success') {
+                        closeMasterPasswordModal();
+                        if (currentActionType === 'view') {
+                            showPasswordDisplayModal(data.password);
+                        } else {
+                            await navigator.clipboard.writeText(data.password);
+                            alert('Password copied to clipboard!');
+                        }
+                    } else {
+                        errorElement.textContent = data.message || 'Incorrect master password. Please try again.';
+                        errorElement.style.display = 'block';
+                        document.getElementById('masterPassword').value = '';
+                    }
+                } else if (currentActionType === 'manager') {
+                    // For accessing password manager
+                    const response = await fetch('{% url "verify_master_password" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ master_password: masterPassword })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        window.location.href = currentActionUrl;
+                    } else {
+                        errorElement.textContent = data.message || 'Incorrect master password. Please try again.';
+                        errorElement.style.display = 'block';
+                        document.getElementById('masterPassword').value = '';
+                    }
+                } else {
+                    // For editing password
+                    const response = await fetch('{% url "verify_master_password" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ master_password: masterPassword })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        window.location.href = currentActionUrl;
+                    } else {
+                        errorElement.textContent = data.message || 'Incorrect master password. Please try again.';
+                        errorElement.style.display = 'block';
+                        document.getElementById('masterPassword').value = '';
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorElement.textContent = 'An error occurred. Please try again.';
+                errorElement.style.display = 'block';
+            }
+        });
+
+        // Close modals when clicking outside
+        document.getElementById('masterPasswordModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeMasterPasswordModal();
+            }
+        });
+
+        document.getElementById('passwordDisplayModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePasswordDisplayModal();
+            }
+        });
+
+        // Close modals with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeMasterPasswordModal();
+                closePasswordDisplayModal();
+            }
+        });
+
+        // Add these new functions for recovery options
+        function showRecoveryModal() {
+            document.getElementById('recoveryModal').style.display = 'flex';
+        }
+
+        function closeRecoveryModal() {
+            document.getElementById('recoveryModal').style.display = 'none';
+        }
+
+        function showRecoveryMethod(method) {
+            closeRecoveryModal();
+            // Add your recovery method implementation here
+            switch(method) {
+                case 'email':
+                    // Implement email recovery
+                    break;
+                case 'security_questions':
+                    // Implement security questions
+                    break;
+                case 'backup_codes':
+                    // Implement backup codes
+                    break;
+            }
+        }
+
+        // Add these new functions for master password update
+        function showUpdateMasterPasswordModal() {
+            document.getElementById('updateMasterPasswordModal').style.display = 'flex';
+        }
+
+        function closeUpdateMasterPasswordModal() {
+            document.getElementById('updateMasterPasswordModal').style.display = 'none';
+            document.getElementById('currentMasterPassword').value = '';
+            document.getElementById('newMasterPassword').value = '';
+            document.getElementById('confirmNewMasterPassword').value = '';
+            document.getElementById('updateMasterPasswordError').style.display = 'none';
+        }
+
+        document.getElementById('updateMasterPasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('currentMasterPassword').value;
+            const newPassword = document.getElementById('newMasterPassword').value;
+            const confirmPassword = document.getElementById('confirmNewMasterPassword').value;
+            const errorElement = document.getElementById('updateMasterPasswordError');
+
+            if (newPassword !== confirmPassword) {
+                errorElement.textContent = 'New passwords do not match.';
+                errorElement.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('{% url "update_master_password" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    closeUpdateMasterPasswordModal();
+                    alert('Master password updated successfully!');
+                    // Redirect to settings page or refresh current page
+                    window.location.reload();
+                } else {
+                    errorElement.textContent = data.message || 'Failed to update master password.';
+                    errorElement.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorElement.textContent = 'An error occurred. Please try again.';
+                errorElement.style.display = 'block';
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

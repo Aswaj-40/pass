@@ -1,0 +1,328 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Password Health Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="header-content">
+            <h1>Password Health Dashboard</h1>
+            <p>Monitor and improve your password security</p>
+        </div>
+    </div>
+
+    <div class="health-stats">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value" id="securityScore">0%</div>
+                <div class="stat-label">Overall Security Score</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value" id="weakPasswords">0</div>
+                <div class="stat-label">Weak Passwords</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-sync"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value" id="expiredPasswords">0</div>
+                <div class="stat-label">Passwords to Rotate</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2>Password Strength Analysis</h2>
+            </div>
+            <div class="strength-chart" id="strengthChart">
+                <!-- Chart will be rendered here -->
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2>Password Age Distribution</h2>
+            </div>
+            <div class="age-chart" id="ageChart">
+                <!-- Chart will be rendered here -->
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2>Security Recommendations</h2>
+                <button class="action-btn" onclick="refreshRecommendations()">
+                    <i class="fas fa-sync"></i>
+                </button>
+            </div>
+            <div class="recommendations-list" id="recommendationsList">
+                <!-- Recommendations will be loaded here -->
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2>Weak Passwords</h2>
+                <button class="action-btn" onclick="showUpdateModal()">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </div>
+            <div class="weak-passwords-list" id="weakPasswordsList">
+                <!-- Weak passwords will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Password Modal -->
+<div class="master-password-modal" id="updatePasswordModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-key"></i>
+            <h2>Update Password</h2>
+        </div>
+        <form id="updatePasswordForm">
+            <div class="modal-input-group">
+                <i class="fas fa-globe"></i>
+                <input type="text" id="updateWebsite" readonly>
+            </div>
+            <div class="modal-input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="updateUsername" readonly>
+            </div>
+            <div class="modal-input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="updatePassword" placeholder="New password" required>
+            </div>
+            <div class="password-strength-meter">
+                <div class="strength-bar"></div>
+                <span class="strength-text">Password Strength: <span id="strengthText">Weak</span></span>
+            </div>
+            <div class="modal-error" id="updatePasswordError"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeUpdateModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    Update
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .health-stats {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .strength-chart, .age-chart {
+        height: 300px;
+        margin-top: 1rem;
+    }
+
+    .recommendations-list, .weak-passwords-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .recommendation-item, .weak-password-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .recommendation-item:last-child, .weak-password-item:last-child {
+        border-bottom: none;
+    }
+
+    .recommendation-icon {
+        color: #6366f1;
+        margin-right: 1rem;
+    }
+
+    .password-strength-meter {
+        margin: 1rem 0;
+    }
+
+    .strength-bar {
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+    }
+
+    .strength-text {
+        font-size: 0.875rem;
+        color: var(--text-color-light);
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let strengthChart, ageChart;
+    let currentPasswordId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadHealthData();
+        initializeCharts();
+    });
+
+    function loadHealthData() {
+        fetch('{% url "get_password_health" %}')
+            .then(response => response.json())
+            .then(data => {
+                updateDashboard(data);
+                updateCharts(data);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function updateDashboard(data) {
+        document.getElementById('securityScore').textContent = `${data.security_score}%`;
+        document.getElementById('weakPasswords').textContent = data.weak_passwords_count;
+        document.getElementById('expiredPasswords').textContent = data.expired_passwords_count;
+
+        const recommendationsList = document.getElementById('recommendationsList');
+        recommendationsList.innerHTML = data.recommendations.map(rec => `
+            <div class="recommendation-item">
+                <div>
+                    <i class="fas ${rec.icon} recommendation-icon"></i>
+                    <span>${rec.message}</span>
+                </div>
+                ${rec.action ? `<button class="btn btn-primary" onclick="${rec.action}">${rec.action_text}</button>` : ''}
+            </div>
+        `).join('');
+
+        const weakPasswordsList = document.getElementById('weakPasswordsList');
+        weakPasswordsList.innerHTML = data.weak_passwords.map(pwd => `
+            <div class="weak-password-item">
+                <div>
+                    <strong>${pwd.website}</strong>
+                    <div>${pwd.username}</div>
+                </div>
+                <button class="btn btn-primary" onclick="showUpdateModal(${pwd.id}, '${pwd.website}', '${pwd.username}')">
+                    Update
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function initializeCharts() {
+        const strengthCtx = document.getElementById('strengthChart').getContext('2d');
+        strengthChart = new Chart(strengthCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Strong', 'Medium', 'Weak'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        const ageCtx = document.getElementById('ageChart').getContext('2d');
+        ageChart = new Chart(ageCtx, {
+            type: 'bar',
+            data: {
+                labels: ['< 30 days', '30-90 days', '90-180 days', '> 180 days'],
+                datasets: [{
+                    label: 'Password Age',
+                    data: [0, 0, 0, 0],
+                    backgroundColor: '#6366f1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+
+    function updateCharts(data) {
+        strengthChart.data.datasets[0].data = [
+            data.strong_passwords_count,
+            data.medium_passwords_count,
+            data.weak_passwords_count
+        ];
+        strengthChart.update();
+
+        ageChart.data.datasets[0].data = [
+            data.passwords_less_than_30_days,
+            data.passwords_30_to_90_days,
+            data.passwords_90_to_180_days,
+            data.passwords_more_than_180_days
+        ];
+        ageChart.update();
+    }
+
+    function showUpdateModal(id, website, username) {
+        currentPasswordId = id;
+        document.getElementById('updateWebsite').value = website;
+        document.getElementById('updateUsername').value = username;
+        document.getElementById('updatePasswordModal').style.display = 'flex';
+    }
+
+    function closeUpdateModal() {
+        document.getElementById('updatePasswordModal').style.display = 'none';
+        document.getElementById('updatePassword').value = '';
+        document.getElementById('updatePasswordError').style.display = 'none';
+        currentPasswordId = null;
+    }
+
+    document.getElementById('updatePasswordForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const newPassword = document.getElementById('updatePassword').value;
+
+        fetch(`/password-manager/update/${currentPasswordId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                password: newPassword
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeUpdateModal();
+                loadHealthData();
+            } else {
+                document.getElementById('updatePasswordError').textContent = data.message;
+                document.getElementById('updatePasswordError').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('updatePasswordError').textContent = 'An error occurred. Please try again.';
+            document.getElementById('updatePasswordError').style.display = 'block';
+        });
+    });
+
+    function refreshRecommendations() {
+        loadHealthData();
+    }
+</script>
+{% endblock %} 

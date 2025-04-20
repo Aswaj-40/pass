@@ -1,0 +1,890 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Security Settings{% endblock %}
+
+{% block content %}
+<div class="security-container">
+    <div class="security-header">
+        <div class="header-content">
+            <h1>Security Settings</h1>
+            <p class="subtitle">Manage your account's security and protection</p>
+        </div>
+        <div class="security-score">
+            <div class="score-ring">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#444"
+                        stroke-width="2"
+                        stroke-dasharray="100, 100"/>
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#6366f1"
+                        stroke-width="2"
+                        stroke-dasharray="85, 100"/>
+                </svg>
+                <div class="score-text">
+                    <span class="score-value">85</span>
+                    <span class="score-label">Security Score</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} fade show">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="security-grid">
+        <!-- Master Password Section -->
+        <div class="security-card">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-key"></i>
+                </div>
+                <div class="header-text">
+                    <h2>Master Password</h2>
+                    <p>Change your master password regularly for enhanced security</p>
+                </div>
+                <div class="security-status">
+                    <span class="status-badge {% if last_password_change %}success{% else %}warning{% endif %}">
+                        <i class="fas {% if last_password_change %}fa-shield-check{% else %}fa-exclamation-triangle{% endif %}"></i>
+                        {% if last_password_change %}
+                            Updated {{ last_password_change|timesince }} ago
+                        {% else %}
+                            Never changed
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            <form method="post" class="security-form" id="masterPasswordForm">
+                {% csrf_token %}
+                <input type="hidden" name="change_master_password" value="1">
+                
+                <div class="form-group">
+                    <label for="current_master_password">
+                        <i class="fas fa-lock"></i>
+                        Current Master Password
+                    </label>
+                    <div class="input-group">
+                        <input type="password" 
+                               id="current_master_password" 
+                               name="current_master_password" 
+                               required
+                               class="form-input">
+                        <button type="button" class="toggle-password" onclick="togglePassword('current_master_password')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="new_master_password">
+                        <i class="fas fa-key"></i>
+                        New Master Password
+                    </label>
+                    <div class="input-group">
+                        <input type="password" 
+                               id="new_master_password" 
+                               name="new_master_password" 
+                               required
+                               class="form-input"
+                               onkeyup="checkPasswordStrength(this.value)">
+                        <button type="button" class="toggle-password" onclick="togglePassword('new_master_password')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-strength">
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthFill"></div>
+                        </div>
+                        <span class="strength-text" id="strengthText">Password Strength</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_master_password">
+                        <i class="fas fa-check-double"></i>
+                        Confirm New Master Password
+                    </label>
+                    <div class="input-group">
+                        <input type="password" 
+                               id="confirm_master_password" 
+                               name="confirm_master_password" 
+                               required
+                               class="form-input">
+                        <button type="button" class="toggle-password" onclick="togglePassword('confirm_master_password')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Update Master Password
+                </button>
+            </form>
+        </div>
+
+        <!-- Two-Factor Authentication Section -->
+        <div class="security-card">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="header-text">
+                    <h2>Two-Factor Authentication</h2>
+                    <p>Add an extra layer of security to your account</p>
+                </div>
+                <div class="security-status">
+                    <span class="status-badge {% if has_2fa %}success{% else %}warning{% endif %}">
+                        <i class="fas {% if has_2fa %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+                        {{ has_2fa|yesno:"Enabled,Disabled" }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-content">
+                {% if not has_2fa %}
+                    <div class="two-factor-setup">
+                        <div class="setup-steps">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h3>Install Authenticator App</h3>
+                                    <p>Download Google Authenticator or similar app on your phone</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h3>Scan QR Code</h3>
+                                    <p>Scan this QR code with your authenticator app</p>
+                                    {% if qr_code %}
+                                        <div class="qr-code">
+                                            <img src="data:image/png;base64,{{ qr_code }}" alt="2FA QR Code">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h3>Verify Setup</h3>
+                                    <p>Enter the 6-digit code from your authenticator app</p>
+                                    <form method="post" class="verify-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="verify_2fa" value="1">
+                                        <div class="form-group">
+                                            <input type="text" 
+                                                   name="verification_code" 
+                                                   placeholder="Enter 6-digit code" 
+                                                   maxlength="6"
+                                                   pattern="[0-9]{6}"
+                                                   required
+                                                   class="form-input">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-check"></i>
+                                            Verify and Enable 2FA
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="two-factor-info">
+                        <div class="info-item">
+                            <i class="fas fa-mobile-alt"></i>
+                            <div class="info-text">
+                                <h3>Authenticator App</h3>
+                                <p>2FA is enabled using your authenticator app</p>
+                            </div>
+                        </div>
+                        <form method="post" class="security-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="disable_2fa" value="1">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-toggle-off"></i>
+                                Disable Two-Factor Authentication
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Security Log Section -->
+        <div class="security-card">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="header-text">
+                    <h2>Security Log</h2>
+                    <p>Recent security-related activities on your account</p>
+                </div>
+            </div>
+            <div class="security-log">
+                <div class="log-item">
+                    <div class="log-icon success">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="log-content">
+                        <h4>Security Check Completed</h4>
+                        <p>All security measures are up to date</p>
+                        <span class="log-time">2 hours ago</span>
+                    </div>
+                </div>
+                <div class="log-item">
+                    <div class="log-icon warning">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </div>
+                    <div class="log-content">
+                        <h4>New Login Detected</h4>
+                        <p>Login from new device (Windows PC)</p>
+                        <span class="log-time">Yesterday</span>
+                    </div>
+                </div>
+                <div class="log-item">
+                    <div class="log-icon info">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div class="log-content">
+                        <h4>Master Password Updated</h4>
+                        <p>Successfully changed master password</p>
+                        <span class="log-time">3 days ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recovery Options Section -->
+        <div class="security-card">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-life-ring"></i>
+                </div>
+                <div class="header-text">
+                    <h2>Recovery Options</h2>
+                    <p>Set up methods to recover your account</p>
+                </div>
+            </div>
+            <div class="recovery-options">
+                <div class="recovery-item">
+                    <div class="recovery-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="recovery-content">
+                        <h3>Recovery Email</h3>
+                        <p>{{ user.email }}</p>
+                        <button class="btn btn-outline">Change Email</button>
+                    </div>
+                </div>
+                <div class="recovery-item">
+                    <div class="recovery-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <div class="recovery-content">
+                        <h3>Recovery Phone</h3>
+                        <p>Not set</p>
+                        <button class="btn btn-outline">Add Phone</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.security-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    animation: fadeIn 0.5s ease-out;
+    background: #0a0a0a;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.security-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.header-content h1 {
+    font-size: 2.5rem;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+.subtitle {
+    color: var(--text-color-light);
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.security-score {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.score-ring {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.circular-chart {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.circular-chart path {
+    transition: stroke-dasharray 1s ease-in-out;
+}
+
+.security-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 2rem;
+    perspective: 1000px;
+}
+
+.security-card {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.security-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1, #4f46e5);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.security-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.security-card:hover::before {
+    transform: scaleX(1);
+}
+
+.card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.header-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.1) 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.header-icon i {
+    font-size: 1.4rem;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header-text h2 {
+    font-size: 1.4rem;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.header-text p {
+    color: var(--text-color-light);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.status-badge.success {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.1) 100%);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge.warning {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(234, 179, 8, 0.1) 100%);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.form-group label i {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.input-group {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.form-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background: #0f0f0f;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    background: #0f0f0f;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.toggle-password {
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6366f1;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.3s ease;
+}
+
+.toggle-password:hover {
+    transform: translateY(-50%) scale(1.1);
+}
+
+.password-strength {
+    margin-top: 0.75rem;
+}
+
+.strength-bar {
+    height: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.strength-fill {
+    height: 100%;
+    width: 0;
+    transition: all 0.5s ease;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.btn-outline {
+    background: #0f0f0f;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: #ffffff;
+    transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+    background: #1a1a1a;
+    border-color: #6366f1;
+}
+
+.two-factor-setup {
+    margin-top: 1.5rem;
+}
+
+.setup-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.step {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content h3 {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.step-content p {
+    color: var(--text-color-light);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.qr-code {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    display: inline-block;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.qr-code img {
+    width: 200px;
+    height: 200px;
+}
+
+.verify-form {
+    max-width: 300px;
+}
+
+.verify-form .form-input {
+    text-align: center;
+    letter-spacing: 4px;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.two-factor-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    transform: translateX(5px);
+    border-color: #6366f1;
+}
+
+.security-log {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.log-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.log-item:hover {
+    transform: translateX(5px);
+    border-color: #6366f1;
+}
+
+.log-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.log-icon.success {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.1) 100%);
+    color: #22c55e;
+}
+
+.log-icon.warning {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(234, 179, 8, 0.1) 100%);
+    color: #eab308;
+}
+
+.log-icon.info {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.1) 100%);
+    color: #6366f1;
+}
+
+.recovery-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.recovery-item {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.recovery-item:hover {
+    transform: translateX(5px);
+    border-color: #6366f1;
+}
+
+.recovery-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.1) 100%);
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.recovery-icon i {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 1.4rem;
+}
+
+@media (max-width: 768px) {
+    .security-container {
+        padding: 1rem;
+    }
+
+    .security-header {
+        flex-direction: column;
+        gap: 2rem;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .security-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .security-status {
+        margin: 1rem 0 0;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const button = input.nextElementSibling;
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+function checkPasswordStrength(password) {
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthText = document.getElementById('strengthText');
+    
+    // Calculate password strength
+    let strength = 0;
+    
+    if (password.length >= 12) strength += 25;
+    if (password.match(/[A-Z]/)) strength += 25;
+    if (password.match(/[0-9]/)) strength += 25;
+    if (password.match(/[^A-Za-z0-9]/)) strength += 25;
+    
+    // Update UI
+    strengthFill.style.width = strength + '%';
+    
+    if (strength <= 25) {
+        strengthFill.style.background = '#ef4444';
+        strengthText.textContent = 'Weak';
+    } else if (strength <= 50) {
+        strengthFill.style.background = '#eab308';
+        strengthText.textContent = 'Fair';
+    } else if (strength <= 75) {
+        strengthFill.style.background = '#22c55e';
+        strengthText.textContent = 'Good';
+    } else {
+        strengthFill.style.background = '#6366f1';
+        strengthText.textContent = 'Strong';
+    }
+}
+
+// Auto-hide messages after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        const messages = document.querySelectorAll('.alert');
+        messages.forEach(function(message) {
+            message.style.opacity = '0';
+            message.style.transform = 'translateY(-10px)';
+            setTimeout(() => message.remove(), 300);
+        });
+    }, 5000);
+});
+</script>
+{% endblock %} 
